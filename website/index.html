@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumen — фоторедактор для macOS, Windows и Linux</title>
+  <meta name="description" content="Lumen — быстрый фоторедактор со слоями, кистями, коррекцией и фильтрами. Бесплатно для macOS, Windows и Linux.">
+  <meta name="theme-color" content="#111114">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Lumen — фоторедактор">
+  <meta property="og:description" content="Слои, кисти с нажимом, коррекция и фильтры. macOS · Windows · Linux.">
+  <meta property="og:image" content="assets/screenshot.png">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preload" href="releases.json" as="fetch" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#download" data-i18n="skip">К загрузке</a>
+  <header class="top">
+    <a class="brand" href="#" aria-label="Lumen"><img src="assets/icon-64.png" width="28" height="28" alt=""> Lumen</a>
+    <nav aria-label="Навигация" data-i18n-attr="aria-label:nav">
+      <a href="#features" data-i18n="navFeatures">Возможности</a>
+      <a href="#download" data-i18n="navDownload">Скачать</a>
+      <a href="#install" data-i18n="navInstall">Установка</a>
+    </nav>
+    <button class="lang" id="lang" type="button" aria-label="Switch to English">EN</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-i18n="eyebrow">Бесплатно · без регистрации · работает офлайн</span></p>
+        <h1 data-i18n="title">Фоторедактор, который&nbsp;просто работает</h1>
+        <p class="lead" data-i18n="lead">Слои и режимы наложения, кисти с нажимом пера, выделения, коррекция и фильтры в фоновом потоке. Нативное приложение для macOS, Windows и Linux.</p>
+        <div class="cta">
+          <a class="btn primary" id="primary" href="#download">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2z"/></svg>
+            <span id="primary-label" data-i18n="downloadGeneric">Скачать</span>
+          </a>
+          <a class="btn ghost" href="#download" data-i18n="otherPlatforms">Другие платформы</a>
+        </div>
+        <p class="meta" id="primary-meta" aria-live="polite"></p>
+      </div>
+      <figure class="shot">
+        <picture>
+          <img src="assets/screenshot.png" width="1440" height="900" alt="Окно Lumen: фотография на холсте, панели слоёв и коррекции" data-i18n-attr="alt:shotAlt" fetchpriority="high">
+        </picture>
+      </figure>
+    </section>
+
+    <section id="features" class="features" aria-labelledby="f-h">
+      <h2 id="f-h" class="sr" data-i18n="navFeatures">Возможности</h2>
+      <ul>
+        <li><b data-i18n="f1t">Слои и маски</b><span data-i18n="f1">Режимы наложения, прозрачность, сведение и проекты .lumen.</span></li>
+        <li><b data-i18n="f2t">Кисти с нажимом</b><span data-i18n="f2">Сглаживание штриха, жёсткость, поток, ластик и заливка.</span></li>
+        <li><b data-i18n="f3t">Коррекция</b><span data-i18n="f3">Уровни, кривые, цветовой тон, экспозиция — без лагов, в отдельном потоке.</span></li>
+        <li><b data-i18n="f4t">Нативно</b><span data-i18n="f4">Открытие двойным щелчком, системные диалоги, меню, автосохранение.</span></li>
+      </ul>
+    </section>
+
+    <section id="download" class="download" aria-labelledby="d-h">
+      <div class="d-head">
+        <h2 id="d-h" data-i18n="navDownload">Скачать</h2>
+        <p class="version" id="version"></p>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Платформа" data-i18n-attr="aria-label:platform">
+        <button role="tab" id="tab-mac" aria-controls="panel" data-os="mac">macOS</button>
+        <button role="tab" id="tab-win" aria-controls="panel" data-os="win">Windows</button>
+        <button role="tab" id="tab-linux" aria-controls="panel" data-os="linux">Linux</button>
+      </div>
+      <div id="panel" role="tabpanel" class="panel" tabindex="0">
+        <p class="loading" data-i18n="loading">Загрузка списка файлов…</p>
+      </div>
+      <p class="sums"><a id="sums" href="#" data-i18n="allSums">Все контрольные суммы (SHA256SUMS.txt)</a></p>
+    </section>
+
+    <section id="install" class="install" aria-labelledby="i-h">
+      <h2 id="i-h" data-i18n="navInstall">Установка</h2>
+      <div class="cards">
+        <article class="card" data-os="mac">
+          <h3>macOS</h3>
+          <ol>
+            <li data-i18n="m1">Откройте .dmg и перетащите Lumen в «Программы».</li>
+            <li data-i18n-html="m2">Сборка пока без подписи Apple. При первом запуске: щёлкните Lumen правой кнопкой → <b>Открыть</b> → <b>Открыть</b>. Или в Терминале:</li>
+          </ol>
+          <pre><code>xattr -dr com.apple.quarantine /Applications/Lumen.app</code></pre>
+          <p class="note" data-i18n="m3">Universal работает на любом Mac; Apple Silicon и Intel — версии поменьше.</p>
+        </article>
+        <article class="card" data-os="win">
+          <h3>Windows 10 / 11</h3>
+          <ol>
+            <li data-i18n="w1">Установщик (.exe) ставит Lumen для текущего пользователя, создаёт ярлыки и связывает файлы.</li>
+            <li data-i18n="w2">Portable — один .exe без установки, можно запускать с флешки.</li>
+            <li data-i18n-html="w3">Сборка без подписи, поэтому SmartScreen может показать «Windows защитила ваш компьютер»: нажмите <b>Подробнее</b> → <b>Выполнить в любом случае</b>.</li>
+          </ol>
+        </article>
+        <article class="card" data-os="linux">
+          <h3>Linux</h3>
+          <p class="note" data-i18n="l0">Ubuntu, Debian, Mint, Fedora, openSUSE, Arch и др.; GNOME, KDE, XFCE и любые другие окружения.</p>
+          <h4>AppImage</h4>
+          <pre><code>chmod +x Lumen-*.AppImage
+./Lumen-*.AppImage</code></pre>
+          <h4>Ubuntu / Debian (.deb)</h4>
+          <pre><code>sudo apt install ./Lumen-*-linux-amd64.deb</code></pre>
+          <h4>Fedora / RHEL / openSUSE (.rpm)</h4>
+          <pre><code>sudo dnf install ./Lumen-*-linux-x86_64.rpm</code></pre>
+          <h4>tar.gz</h4>
+          <pre><code>tar xzf Lumen-*-linux-x64.tar.gz
+./Lumen-*/lumen</code></pre>
+          <p class="note" data-i18n-html="l1">Если AppImage не стартует на Ubuntu 22.04+, установите <code>libfuse2</code> (<code>sudo apt install libfuse2t64</code>) или запустите с <code>--appimage-extract-and-run</code>.</p>
+        </article>
+      </div>
+      <p class="verify" data-i18n-html="verify">Проверка файла: <code>shasum -a 256 файл</code> (macOS), <code>sha256sum файл</code> (Linux), <code>Get-FileHash файл</code> (Windows) — сравните с SHA-256 выше.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>© Lumen</span>
+    <span data-i18n="webToo">Также работает в браузере — та же программа.</span>
+  </footer>
+  <script src="app.js" defer></script>
+</body>
+</html>

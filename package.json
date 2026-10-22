@@ -1,0 +1,265 @@
+{
+  "name": "lumen-photo-editor",
+  "private": true,
+  "version": "0.1.0-alpha",
+  "type": "module",
+  "description": "Lumen — профессиональный фоторедактор в браузере",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "node scripts/e2e.mjs e2e-out",
+    "app:dev": "node scripts/app-dev.mjs",
+    "app:start": "vite build && electron .",
+    "icons": "node scripts/make-icons.mjs",
+    "dist:mac": "vite build && electron-builder --mac --publish never",
+    "dist:win": "vite build && electron-builder --win --publish never",
+    "dist:linux": "vite build && electron-builder --linux --publish never",
+    "dist:all": "vite build && electron-builder --mac --win --linux --publish never",
+    "releases": "node scripts/make-releases.mjs",
+    "smoke": "node scripts/smoke-packaged.mjs"
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3",
+    "playwright-core": "^1.64.1",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "productName": "Lumen",
+  "main": "electron/main.cjs",
+  "author": {
+    "name": "Lumen",
+    "email": "noreply@lumen.app"
+  },
+  "homepage": "https://github.com/Zenka737/Lumen",
+  "license": "MIT",
+  "build": {
+    "appId": "app.lumen.editor",
+    "productName": "Lumen",
+    "copyright": "© Lumen contributors",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "artifactName": "Lumen-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icons/512x512.png",
+      "package.json",
+      "!dist/**/*.map"
+    ],
+    "asar": true,
+    "fileAssociations": [
+      {
+        "ext": [
+          "png"
+        ],
+        "name": "PNG Image",
+        "role": "Editor",
+        "mimeType": "image/png",
+        "rank": "Alternate"
+      },
+      {
+        "ext": [
+          "jpg",
+          "jpeg"
+        ],
+        "name": "JPEG Image",
+        "role": "Editor",
+        "mimeType": "image/jpeg",
+        "rank": "Alternate"
+      },
+      {
+        "ext": [
+          "webp"
+        ],
+        "name": "WebP Image",
+        "role": "Editor",
+        "mimeType": "image/webp",
+        "rank": "Alternate"
+      },
+      {
+        "ext": [
+          "lumen"
+        ],
+        "name": "Lumen Project",
+        "description": "Lumen Project",
+        "role": "Editor",
+        "mimeType": "application/x-lumen-project",
+        "rank": "Owner",
+        "icon": "icon"
+      }
+    ],
+    "publish": null,
+    "mac": {
+      "category": "public.app-category.graphics-design",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64",
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64",
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "darkModeSupport": true,
+      "minimumSystemVersion": "12.0",
+      "notarize": false
+    },
+    "dmg": {
+      "title": "Lumen ${version}",
+      "contents": [
+        {
+          "x": 150,
+          "y": 190
+        },
+        {
+          "x": 450,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 600,
+        "height": 400
+      }
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "legalTrademarks": "Lumen"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lumen",
+      "artifactName": "Lumen-${version}-win-${arch}-setup.${ext}",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Lumen-${version}-win-${arch}-portable.${ext}"
+    },
+    "linux": {
+      "icon": "build/icons",
+      "category": "Graphics;2DGraphics;RasterGraphics;Photography",
+      "synopsis": "Photo editor",
+      "description": "Lumen — fast layered photo editor",
+      "maintainer": "Lumen <noreply@lumen.app>",
+      "vendor": "Lumen",
+      "executableName": "lumen",
+      "desktop": {
+        "entry": {
+          "Name": "Lumen",
+          "GenericName": "Photo Editor",
+          "GenericName[ru]": "Фоторедактор",
+          "Comment": "Edit photos and images",
+          "Comment[ru]": "Редактирование фотографий",
+          "Keywords": "photo;image;editor;paint;layers;",
+          "StartupWMClass": "Lumen"
+        }
+      },
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "deb": {
+      "depends": [
+        "libgtk-3-0 | libgtk-3-0t64",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0 | libatspi2.0-0t64",
+        "libuuid1",
+        "libsecret-1-0",
+        "libasound2 | libasound2t64"
+      ]
+    },
+    "rpm": {
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss",
+        "libXScrnSaver",
+        "libXtst",
+        "xdg-utils",
+        "at-spi2-core",
+        "libuuid"
+      ],
+      "fpm": [
+        "--rpm-rpmbuild-define=_build_id_links none"
+      ]
+    },
+    "appImage": {
+      "artifactName": "Lumen-${version}-linux-${arch}.AppImage"
+    }
+  }
+}

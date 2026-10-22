@@ -1,0 +1,169 @@
+{
+  "name": "Lumen",
+  "version": "0.1.0-alpha",
+  "date": "2026-10-22",
+  "files": [
+    {
+      "os": "linux",
+      "kind": "rpm",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-linux-aarch64.rpm",
+      "size": 86213945,
+      "sha256": "4d8ce9df98f7b791fc07b92888f511719d24112981e64a0653afcc2105544da4",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-aarch64.rpm"
+    },
+    {
+      "os": "linux",
+      "kind": "deb",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-linux-amd64.deb",
+      "size": 102298880,
+      "sha256": "3d7ee1b83cf95ef7514ec0715ee059239bae94b2e6d076e589b5d97a95168d37",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-amd64.deb"
+    },
+    {
+      "os": "linux",
+      "kind": "appimage",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-linux-arm64.AppImage",
+      "size": 127895175,
+      "sha256": "5c29035ebe92cda88faa50ed1a816d708b57fe5b8073b79cb92efb2769eb0167",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-arm64.AppImage"
+    },
+    {
+      "os": "linux",
+      "kind": "deb",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-linux-arm64.deb",
+      "size": 97183544,
+      "sha256": "3a27d696ce268a9df295fc8f1152d763ba3dd5e06752f23bf6c7978c1880c4cd",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-arm64.deb"
+    },
+    {
+      "os": "linux",
+      "kind": "targz",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-linux-arm64.tar.gz",
+      "size": 121487360,
+      "sha256": "de7caab7ec79c920530222d80ee3ce7dde4b04c2302792fdaaea5085b11d5e7b",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-arm64.tar.gz"
+    },
+    {
+      "os": "linux",
+      "kind": "targz",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-linux-x64.tar.gz",
+      "size": 120506728,
+      "sha256": "39f1feb8066c0193e0679301397638b60d9ddab130dbbbe4d1b96f45d4527183",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-x64.tar.gz"
+    },
+    {
+      "os": "linux",
+      "kind": "appimage",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-linux-x86_64.AppImage",
+      "size": 126621736,
+      "sha256": "cf4b5ed2b5f3f2c0a63fc142b244c7d97bd8d628315c592ca631b48325854b17",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-x86_64.AppImage"
+    },
+    {
+      "os": "linux",
+      "kind": "rpm",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-linux-x86_64.rpm",
+      "size": 90853229,
+      "sha256": "b2c074c7ee7c37998f55d011ab5b48fe63769ab53e3d7c5fc618d3218cf6f0a2",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-linux-x86_64.rpm"
+    },
+    {
+      "os": "mac",
+      "kind": "dmg",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-mac-arm64.dmg",
+      "size": 121525699,
+      "sha256": "42037f0de3ee4be2170ac54a6a93bf5c282d7d265cdbe3dac72b03ea65b18e4a",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-arm64.dmg"
+    },
+    {
+      "os": "mac",
+      "kind": "zip",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-mac-arm64.zip",
+      "size": 120870181,
+      "sha256": "10b94cd377b7e10ee161e8d2546c4a045a0a9f37a4a18a63f80e12d0d83e5a49",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-arm64.zip"
+    },
+    {
+      "os": "mac",
+      "kind": "dmg",
+      "arch": "universal",
+      "file": "Lumen-0.1.0-alpha-mac-universal.dmg",
+      "size": 223474184,
+      "sha256": "a649cef02efb3efd38fa2e5232ff6ce5f7ab089cd538e66fa8b99916eb48a3b3",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-universal.dmg"
+    },
+    {
+      "os": "mac",
+      "kind": "zip",
+      "arch": "universal",
+      "file": "Lumen-0.1.0-alpha-mac-universal.zip",
+      "size": 222777136,
+      "sha256": "0ace49ff92e13f7d0f94b2f376559de1e809a829c99d2d82cf7748f66e5bc086",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-universal.zip"
+    },
+    {
+      "os": "mac",
+      "kind": "dmg",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-mac-x64.dmg",
+      "size": 125794474,
+      "sha256": "4ad30825042d3ae1e7c7f88dea1ed54eb9b04b5b8e71cad42e42af17dde71bcd",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-x64.dmg"
+    },
+    {
+      "os": "mac",
+      "kind": "zip",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-mac-x64.zip",
+      "size": 125155691,
+      "sha256": "7b469e134ec617a1707881c0fda18c2ca3fc858e3ee2258172038d293da184fa",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-mac-x64.zip"
+    },
+    {
+      "os": "win",
+      "kind": "installer",
+      "arch": "arm64",
+      "file": "Lumen-0.1.0-alpha-win-arm64-setup.exe",
+      "size": 106183422,
+      "sha256": "5558ea2f216a43941fff3877d73bb767f0ba971c43ea98608d7ad589c6e29aac",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-win-arm64-setup.exe"
+    },
+    {
+      "os": "win",
+      "kind": "installer",
+      "arch": "universal",
+      "file": "Lumen-0.1.0-alpha-win-setup.exe",
+      "size": 218255399,
+      "sha256": "42bee3f80c01ffe36357b0beafc2748e84a51583a66c941edae6464b7977cdad",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-win-setup.exe"
+    },
+    {
+      "os": "win",
+      "kind": "portable",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-win-x64-portable.exe",
+      "size": 112454264,
+      "sha256": "858de0e4434838d3c1028c9e44a9a6d34e71743cb50639dc775edc083b901dd1",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-win-x64-portable.exe"
+    },
+    {
+      "os": "win",
+      "kind": "installer",
+      "arch": "x64",
+      "file": "Lumen-0.1.0-alpha-win-x64-setup.exe",
+      "size": 112750091,
+      "sha256": "8f7ccc5015abb307c7e1ac6755c49b6b9787f95353d3c828caf770d06d7c2930",
+      "url": "https://github.com/Zenka737/Lumen/releases/download/v0.1.0-alpha/Lumen-0.1.0-alpha-win-x64-setup.exe"
+    }
+  ]
+}

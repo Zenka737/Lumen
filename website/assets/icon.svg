@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26262c"/><stop offset="1" stop-color="#121215"/></linearGradient>
+  <linearGradient id="orb" x1="0.15" y1="0.1" x2="0.85" y2="0.95"><stop offset="0" stop-color="#ffd36e"/><stop offset=".5" stop-color="#ff7a59"/><stop offset="1" stop-color="#7b6cff"/></linearGradient>
+  <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9a6a" stop-opacity=".45"/><stop offset="1" stop-color="#ff9a6a" stop-opacity="0"/></radialGradient>
+  <radialGradient id="core" cx=".42" cy=".38" r=".6"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".78"/></radialGradient>
+  <linearGradient id="hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<rect x="100" y="100" width="824" height="824" rx="186" fill="url(#bg)"/>
+<rect x="100" y="100" width="824" height="824" rx="186" fill="url(#hl)"/>
+<rect x="101.5" y="101.5" width="821" height="821" rx="184.5" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="3"/>
+<circle cx="512" cy="512" r="330" fill="url(#glow)"/>
+<circle cx="512" cy="512" r="250" fill="url(#orb)"/>
+<path d="M512 262a250 250 0 0 1 0 500a250 250 0 0 0 0-500z" fill="#000" fill-opacity=".10"/>
+<circle cx="512" cy="512" r="108" fill="url(#core)"/>
+<circle cx="430" cy="400" r="34" fill="#fff" fill-opacity=".35"/>
+</svg>

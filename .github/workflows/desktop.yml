@@ -1,0 +1,179 @@
+name: Desktop builds
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macOS (arm64 + x64 + universal), os: macos-latest, target: mac, unpacked: release/mac-arm64/Lumen.app/Contents/MacOS/Lumen }
+          - { name: Windows (x64 + arm64), os: windows-latest, target: win, unpacked: release/win-unpacked/Lumen.exe }
+          - { name: Linux (x64 + arm64), os: ubuntu-latest, target: linux, unpacked: release/linux-unpacked/lumen }
+    env:
+      # Unsigned builds work out of the box; signing turns on only when the secrets exist.
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Typecheck, unit tests, web build
+        run: |
+          npm run typecheck
+          npm test
+          npm run build
+      - name: Linux packaging tools
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm xvfb libarchive-tools
+      - name: Build installers
+        shell: bash
+        run: |
+          EXTRA=""
+          if [ "${{ matrix.target }}" = mac ] && [ -n "$APPLE_ID" ]; then EXTRA="-c.mac.notarize=true"; fi
+          npx electron-builder --${{ matrix.target }} --publish never $EXTRA
+      - name: Smoke test packaged app (launch, load editor, no renderer errors)
+        shell: bash
+        run: |
+          if [ "${{ matrix.target }}" = linux ]; then
+            xvfb-run -a -s "-screen 0 1440x900x24" node scripts/smoke-packaged.mjs ${{ matrix.unpacked }}
+            xvfb-run -a -s "-screen 0 1440x900x24" node scripts/verify-electron.mjs ${{ matrix.unpacked }}
+          else
+            node scripts/smoke-packaged.mjs ${{ matrix.unpacked }}
+            node scripts/verify-electron.mjs ${{ matrix.unpacked }}
+          fi
+      - name: macOS — also smoke the x64 build under Rosetta and the universal build
+        if: matrix.target == 'mac'
+        run: |
+          softwareupdate --install-rosetta --agree-to-license || true
+          node scripts/smoke-packaged.mjs release/mac/Lumen.app/Contents/MacOS/Lumen
+          node scripts/smoke-packaged.mjs release/mac-universal/Lumen.app/Contents/MacOS/Lumen
+          hdiutil attach -nobrowse -mountpoint /tmp/lumen-dmg release/Lumen-*-mac-arm64.dmg
+          node scripts/smoke-packaged.mjs /tmp/lumen-dmg/Lumen.app/Contents/MacOS/Lumen
+          hdiutil detach /tmp/lumen-dmg
+      - name: Windows — silent-install NSIS and smoke the installed app + portable
+        if: matrix.target == 'win'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem release\Lumen-*-win-x64-setup.exe | Select-Object -First 1
+          Start-Process $setup.FullName -ArgumentList '/S' -Wait
+          $exe = Join-Path $env:LOCALAPPDATA 'Programs\Lumen\Lumen.exe'
+          if (-not (Test-Path $exe)) { throw "not installed: $exe" }
+          node scripts/smoke-packaged.mjs $exe
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Linux — install .deb/.rpm/AppImage/tar.gz in Ubuntu, Debian, Fedora containers
+        if: matrix.target == 'linux'
+        run: bash scripts/linux-container-smoke.sh release x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lumen-${{ matrix.target }}
+          if-no-files-found: error
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
+            release/*.blockmap
+            release/latest*.yml
+      - uses: actions/upload-artifact@v4
+        if: matrix.target == 'win'
+        with: { name: lumen-win-arm64-unpacked, path: release/win-arm64-unpacked }
+
+  arm64-smoke:
+    name: ARM64 smoke (${{ matrix.name }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Linux arm64, os: ubuntu-24.04-arm }
+          - { name: Windows arm64, os: windows-11-arm }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Linux arm64 packages in containers
+        if: runner.os == 'Linux'
+        uses: actions/download-artifact@v4
+        with: { name: lumen-linux, path: release }
+      - if: runner.os == 'Linux'
+        run: bash scripts/linux-container-smoke.sh release arm64
+      - name: Windows arm64 unpacked app
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@v4
+        with: { name: lumen-win-arm64-unpacked, path: release/win-arm64-unpacked }
+      - if: runner.os == 'Windows'
+        run: node scripts/smoke-packaged.mjs release/win-arm64-unpacked/Lumen.exe
+
+  release:
+    name: GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, arm64-smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@v4
+        with: { name: lumen-mac, path: release }
+      - uses: actions/download-artifact@v4
+        with: { name: lumen-win, path: release }
+      - uses: actions/download-artifact@v4
+        with: { name: lumen-linux, path: release }
+      - name: Checksums + releases.json for the website
+        run: RELEASE_VERSION="${GITHUB_REF_NAME#v}" node scripts/make-releases.mjs release
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          generate_release_notes: true
+          files: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
+            release/*.blockmap
+            release/latest*.yml
+            release/SHA256SUMS.txt
+            website/releases.json
+      - name: Website artifact (download page with the new releases.json)
+        uses: actions/upload-pages-artifact@v3
+        with: { path: website }
+
+  pages:
+    name: Deploy download site
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: release
+    runs-on: ubuntu-latest
+    permissions: { pages: write, id-token: write }
+    environment: { name: github-pages, url: '${{ steps.deploy.outputs.page_url }}' }
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
