@@ -47,7 +47,7 @@ if (!process.env.VERIFY_CDP) {
 let page;
 if (app) {
   app.process().stdout?.on('data', (d) => process.stdout.write(`[main] ${d}`));
-  app.process().stderr?.on('data', (d) => { const s = String(d); if (/\[lumen\]|error/i.test(s) && !/GPU|gpu_|viz|dbus|Gtk/i.test(s)) errors.push(`main: ${s.trim()}`); });
+  app.process().stderr?.on('data', (d) => { const s = String(d); if (/\[lumen\]|error/i.test(s) && !/GPU|gpu_|viz|dbus|Gtk|task_policy_set|process_mac/i.test(s)) errors.push(`main: ${s.trim()}`); });
   page = await app.firstWindow();
 } else {
   log('Playwright Electron launch unavailable: driving the window over CDP (no native menu / quit-guard steps)');
