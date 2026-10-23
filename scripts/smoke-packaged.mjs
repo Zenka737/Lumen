@@ -16,7 +16,7 @@ if (!exe || !existsSync(exe)) { console.error('smoke: executable not found', exe
 
 const tmp = mkdtempSync(join(tmpdir(), 'lumen-smoke-'));
 const args = process.platform === 'linux' ? ['--no-sandbox', ...(process.env.CI ? ['--disable-gpu'] : [])] : [];
-const env = { ...process.env, LUMEN_SMOKE: '1', LUMEN_USER_DATA: join(tmp, 'profile'), LUMEN_SMOKE_SHOT: join(tmp, 'smoke.png') };
+const env = { ...process.env, ...(process.env.CI ? { LUMEN_DISABLE_GPU: '1' } : {}), LUMEN_SMOKE: '1', LUMEN_USER_DATA: join(tmp, 'profile'), LUMEN_SMOKE_SHOT: join(tmp, 'smoke.png') };
 console.log('smoke: launching', exe);
 const child = spawn(exe, args, { env });
 let out = '';

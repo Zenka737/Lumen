@@ -28,7 +28,7 @@ const app = await electron.launch({
   executablePath: exe || electronPath,
   args: [...(exe ? [] : ['.']), image, ...(process.platform === 'linux' ? ['--no-sandbox'] : [])],
   timeout: 60_000,
-  env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1', LUMEN_SAVE_DIR: outDir, LUMEN_USER_DATA: join(outDir, 'profile') },
+  env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1', ...(process.env.CI ? { LUMEN_DISABLE_GPU: '1' } : {}), LUMEN_SAVE_DIR: outDir, LUMEN_USER_DATA: join(outDir, 'profile') },
 });
 app.process().stdout?.on('data', (d) => process.stdout.write(`[main] ${d}`));
 app.process().stderr?.on('data', (d) => { const s = String(d); if (/\[lumen\]|error/i.test(s) && !/GPU|gpu_|viz|dbus|Gtk/i.test(s)) errors.push(`main: ${s.trim()}`); });
