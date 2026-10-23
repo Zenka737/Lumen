@@ -104,6 +104,23 @@ log('saved project', proj, statSync(proj).size, 'bytes');
 
 writeFileSync(join(outDir, 'screenshot.png'), await page.screenshot());
 log('screenshot', join(outDir, 'screenshot.png'));
+// New design features: shapes with corner styles, layer styles, keyframe animation (no console errors, renders)
+const feat = await page.evaluate(async () => {
+  const ed = window.lumen;
+  const mk = (type, extra, x, y) => ed.addShapeLayer({ type, w: 120, h: 90, fill: '#4c6ef5', stroke: null, strokeWidth: 0, radius: 20, ...extra }, x, y, type);
+  const a = mk('rect', { cornerStyle: 'smooth', radii: [30, 0, 30, 0] }, 20, 20);
+  const b = mk('star', { sides: 6, innerRatio: 0.5, cornerStyle: 'cut' }, 200, 20);
+  mk('polygon', { sides: 5 }, 380, 20);
+  ed.setLayerFx(a.meta.id, { shadow: { on: true, color: '#000000', opacity: 0.4, dx: 4, dy: 6, blur: 10 }, stroke: { on: true, color: '#ffffff', width: 4, pos: 'center', opacity: 1 } });
+  ed.doc.animation = { fps: 10, frames: 10, tracks: { [b.meta.id]: { x: [{ f: 0, v: b.meta.x, ease: 'linear' }, { f: 9, v: b.meta.x + 100, ease: 'linear' }], rotation: [{ f: 0, v: 0, ease: 'linear' }, { f: 9, v: 90, ease: 'linear' }] } } };
+  ed.animationChanged();
+  await new Promise((r) => setTimeout(r, 400));
+  const pv = document.querySelector('.timeline-panel canvas');
+  return { layers: ed.doc.layers.length, hasPreview: !!pv, fx: !!ed.doc.find(a.meta.id).meta.fx };
+});
+if (!feat.hasPreview || !feat.fx || feat.layers < 4) throw new Error('new features not working: ' + JSON.stringify(feat));
+log('design features OK:', JSON.stringify(feat));
+
 // Quit guard: make the doc dirty, stub the native confirm (answer "quit without saving"), close.
 await page.evaluate(() => window.lumen.setTool('brush'));
 await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.move(cx + 40, cy + 30); await page.mouse.up();

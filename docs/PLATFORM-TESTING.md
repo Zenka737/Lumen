@@ -1,50 +1,51 @@
 # Platform testing matrix
 
-Status as of 2026-10-22, Lumen 0.1.0-alpha, Electron 45.0.0, electron-builder 26.15.3.
-Build host: one Mac, Apple Silicon (arm64), macOS 26 (Darwin 25.6). No Docker, no Wine, no VMs available.
+Status as of 2026-10-23, Lumen 0.1.0-alpha, Electron 45, electron-builder 26.
 
-Legend: **Verified** = actually executed and checked here. **Built only** = artifact produced, never launched.
-**CI** = covered by `.github/workflows/desktop.yml`, but that workflow has **not been run yet** (no GitHub repo/run exists).
+Everything below is exercised by `.github/workflows/desktop.yml` on every push and pull request. A release (tag `v*`) is published only when all of it is green.
 
-## What was built on this Mac (cross-built where needed)
+## CI matrix
 
-| Target | Artifacts | Built here |
+| Runner | What runs |
+|---|---|
+| `macos-latest` (Apple Silicon) | typecheck, unit tests, web build, arm64 / x64 / universal builds (`.dmg`, `.zip`), smoke + e2e of the arm64 app, `.dmg` mount + smoke, x64 under Rosetta (non-blocking: Rosetta is unreliable inside the hosted VM) |
+| `windows-latest` | x64 + arm64 builds (NSIS, portable), smoke + e2e of the unpacked app, silent install of the NSIS setup + smoke of the installed app |
+| `ubuntu-latest` | x64 + arm64 builds (AppImage, deb, rpm, tar.gz), xvfb smoke + e2e, install in Ubuntu 24.04, Debian 12, Fedora 41 (+ Ubuntu 22.04 tar.gz) containers |
+| `ubuntu-24.04-arm` | the same container install tests for the arm64 packages |
+| `windows-11-arm` | smoke of the arm64 build |
+
+Smoke = launch, load the editor, no renderer errors (`scripts/smoke-packaged.mjs`). E2E (`scripts/verify-electron.mjs`) = open an image from the command line, draw, export through the native menu, save a `.lumen` project, shapes / layer styles / animation sanity check, quit guard, no console errors. On Windows the Playwright Electron handshake stalls on the hosted runners, so the e2e falls back to driving the same window over CDP (native menu and quit-guard steps are skipped there).
+
+## What CI has found and fixed so far
+- macOS: empty `CSC_LINK` secret broke electron-builder ("not a file") → signing variables are only exported when the secret exists.
+- Linux: the deb dependency `libasound2 | libasound2t64` resolved to a stub on Ubuntu 24.04 → `libasound2t64 | libasound2`; rpm gained `alsa-lib`; the arm64 AppImage runtime needs `libz.so` in a bare container.
+- All: hosted runners have no GPU → smoke / e2e run with `LUMEN_DISABLE_GPU=1`.
+
+## Hardware and OS coverage
+
+| | Verified | How |
 |---|---|---|
-| macOS arm64 / x64 / universal | `.dmg`, `.zip` | yes (unsigned) |
-| Windows x64 / arm64 | NSIS `-setup.exe` per arch + combined x64+arm64 installer, x64 portable `.exe` | yes, cross-built without Wine (unsigned) |
-| Linux x64 / arm64 | AppImage, `.deb`, `.rpm` (needs `brew install rpm`), `.tar.gz` | yes, cross-built |
+| macOS 26 on Apple Silicon (M4) | yes | local development machine, packaged app |
+| macOS (hosted runner version) arm64 | yes | CI |
+| macOS x64 | partly | Rosetta 2 on the M4 (local); on CI Rosetta is non-blocking |
+| Windows x64 (hosted Server image) | yes | CI, incl. real silent install |
+| Windows arm64 | smoke only | CI `windows-11-arm` |
+| Ubuntu 24.04 / 22.04, Debian 12, Fedora 41, x64 + arm64 | yes | CI containers (Xvfb, no real desktop) |
 
-## Verification matrix
+## Not verified anywhere yet
+- Real Intel Macs, older macOS versions (13–15), macOS 26.x other than the dev machine.
+- Windows 10, real Windows 11 hardware, multi-monitor / mixed-DPI.
+- GNOME / KDE / XFCE integration, Wayland, file associations on Windows and Linux.
+- Signed / notarized builds (no certificates are configured); auto-update (scaffold only, disabled without a feed).
+- The release job (tag `v*` → GitHub Release + download site) has not run yet; try it on a test tag before the first real release.
+- macOS "liquid glass" (vibrancy + backdrop blur) is only checked on the dev machine; Windows / Linux get the blurred panels without a see-through window.
 
-| Platform / package | Launch | Load editor | Open image | Draw | Export | Save .lumen | Quit guard | No console errors | Where |
-|---|---|---|---|---|---|---|---|---|---|
-| Electron dev (`electron .`), macOS arm64 | Verified | Verified | Verified (CLI arg) | Verified | Verified (via native menu → PNG) | Verified | Verified (prompt shown when dirty) | Verified | this Mac |
-| Packaged `mac-arm64/Lumen.app` | Verified | Verified | Verified (CLI arg, second-instance, Finder `open -a` → `open-file`) | Verified | Verified | Verified | Verified | Verified | this Mac |
-| `.dmg` arm64 (mounted, app launched from it) | Verified | Verified | – | – | – | – | – | Verified (smoke) | this Mac |
-| Packaged `mac-universal/Lumen.app` | Verified | Verified | – | – | – | – | – | Verified (smoke) | this Mac (arm64 slice) |
-| Packaged `mac/Lumen.app` (x64) | Verified under **Rosetta 2** only | Verified | – | – | – | – | – | Verified (smoke) | this Mac — not on a real Intel Mac |
-| Windows x64 NSIS / portable | **Not verified here** | | | | | | | | CI: silent install + smoke + Playwright e2e on `windows-latest` |
-| Windows arm64 | **Not verified here** | | | | | | | | CI: smoke on `windows-11-arm` |
-| Linux x64 AppImage / deb / rpm / tar.gz | **Not verified here** (no Docker) | | | | | | | | CI: xvfb smoke + e2e on `ubuntu-latest`, install in Ubuntu 24.04, Debian 12, Fedora 41, Ubuntu 22.04 containers |
-| Linux arm64 packages | **Not verified here** | | | | | | | | CI: same container tests on `ubuntu-24.04-arm` |
-
-Static checks done on cross-built artifacts (not runtime tests):
-- `.deb` (amd64) unpacked: `/opt/Lumen/lumen`, `usr/share/applications/lumen.desktop` (Categories Graphics, MimeType png/jpeg/webp/x-lumen-project), hicolor icons 16–1024, `usr/share/mime/packages/lumen.xml`, postinst handles chrome-sandbox + AppArmor (Ubuntu 24.04+).
-- Windows `Lumen.exe` has Lumen version resources (product name / description) embedded.
-- macOS `Info.plist`: bundle id `app.lumen.editor`, category graphics-design, document types png/jpg/webp/lumen.
-
-## Not verified anywhere yet (be aware)
-- Any Windows or Linux runtime behaviour, file associations on those OSes, desktop-environment integration (GNOME/KDE/XFCE), Wayland.
-- Real Intel Mac hardware; macOS versions other than 26.
-- Signed/notarized builds (no certificates were used).
-- Auto-update (scaffold only; disabled without a feed).
-- Lighthouse audit of the website (only manual checks: no console errors, no horizontal scroll at 390 px, keyboard-operable tabs).
-
-## How to reproduce
+## How to reproduce locally
 ```
 npm run app:dev                         # dev shell with HMR
 npm run dist:mac | dist:win | dist:linux | dist:all
-node scripts/smoke-packaged.mjs [exe]   # launch packaged app headless-ish, assert editor loaded
-node scripts/verify-electron.mjs [exe]  # Playwright e2e: open, draw, export, save, quit guard
-bash scripts/linux-container-smoke.sh release x64   # needs Docker
+node scripts/smoke-packaged.mjs [exe]   # launch the packaged app, assert the editor loaded
+node scripts/verify-electron.mjs [exe]  # e2e: open, draw, export, save, features, quit guard
+VERIFY_CDP=1 node scripts/verify-electron.mjs [exe]   # same through CDP (what Windows CI uses)
+bash scripts/linux-container-smoke.sh release x64     # needs Docker
 ```
