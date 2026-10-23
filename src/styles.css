@@ -1812,3 +1812,36 @@ kbd {
 .kf-dot { all: unset; cursor: pointer; position: absolute; top: 3px; width: 9px; height: 9px; margin-left: -4px; transform: rotate(45deg); background: color-mix(in srgb, currentColor 45%, transparent); border-radius: 1px; }
 .kf-dot.cur { background: var(--accent, #4c6ef5); }
 .fx-group { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---- appearance / liquid glass ---- */
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.swatch { all: unset; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 1px 3px rgba(0,0,0,.3); }
+.swatch.on { outline: 2px solid var(--text); outline-offset: 2px; }
+.swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+html[data-glass='on'],
+html[data-glass='on'] body,
+html[data-glass='on'] .app { background: transparent; }
+html[data-glass='on'] .topbar,
+html[data-glass='on'] .toolbox,
+html[data-glass='on'] .optionsbar,
+html[data-glass='on'] .panels,
+html[data-glass='on'] .statusbar {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 42%),
+    color-mix(in srgb, var(--bg-1) var(--glass-opacity, 55%), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur, 28px)) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+html[data-glass='on'][data-theme='light'] .topbar,
+html[data-glass='on'][data-theme='light'] .toolbox,
+html[data-glass='on'][data-theme='light'] .optionsbar,
+html[data-glass='on'][data-theme='light'] .panels,
+html[data-glass='on'][data-theme='light'] .statusbar { border-color: rgba(255, 255, 255, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+html[data-glass='on'] .panel { border-color: rgba(255, 255, 255, 0.1); }
+html[data-glass='on'] .workspace { background: color-mix(in srgb, var(--canvas-bg) 78%, transparent); }
+@media (prefers-reduced-transparency: reduce) {
+  html[data-glass='on'] .topbar, html[data-glass='on'] .toolbox, html[data-glass='on'] .optionsbar, html[data-glass='on'] .panels, html[data-glass='on'] .statusbar { background: var(--bg-1); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

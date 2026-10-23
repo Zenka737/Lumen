@@ -15,6 +15,7 @@ import { createHistoryPanel } from './panels/history';
 import { createLayersPanel } from './panels/layers';
 import { createPropertiesPanel } from './panels/properties';
 import { createTimelinePanel } from './panels/timeline';
+import { applyAppearance, loadAppearance, openAppearanceDialog } from './appearance';
 
 const LS = {
   get(k: string): string | null {
@@ -81,6 +82,7 @@ export function mountApp(root: HTMLElement, ed: Editor): void {
       iconBtn(icons.undo, 'Отменить', () => ed.undo(), fmtKey('mod+z')),
       iconBtn(icons.redo, 'Повторить', () => ed.redo(), fmtKey('shift+mod+z')),
       iconBtn(icons.keyboard, 'Горячие клавиши', () => commands.get('help.shortcuts')!.run(), '?'),
+      iconBtn(icons.palette, 'Оформление', () => openAppearanceDialog(() => ed.renderer?.readTheme()), ''),
       themeBtn,
       h('button', { class: 'btn primary small', type: 'button', onclick: () => commands.get('file.export')!.run(), 'data-tip': 'Экспорт изображения', 'data-key': fmtKey('shift+mod+s'), html: icons.download }, h('span', null, 'Экспорт')),
       iconBtn(icons.panel, 'Панели', () => shell.classList.toggle('panels-open'), 'Tab', 'panels-toggle'),
@@ -355,6 +357,7 @@ export function mountApp(root: HTMLElement, ed: Editor): void {
     }
   });
 
+  applyAppearance(loadAppearance());
   applyTheme((LS.get('theme') as 'dark' | 'light' | null) ?? (window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
   renderOptions();
   syncToolbox();

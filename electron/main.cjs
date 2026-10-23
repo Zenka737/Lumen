@@ -92,6 +92,7 @@ function createWindow() {
     x: st.x, y: st.y, width: st.width || 1440, height: st.height || 900, minWidth: 900, minHeight: 600,
     show: false, title: 'Lumen', backgroundColor: '#141416',
     titleBarStyle: isMac ? 'default' : undefined,
+    visualEffectState: isMac ? 'active' : undefined,
     icon: isMac ? undefined : path.join(__dirname, '..', 'build', 'icons', '512x512.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -195,6 +196,12 @@ async function openDialog() {
   if (!r.canceled) r.filePaths.forEach(openPath);
 }
 ipcMain.handle('lumen:open-dialog', () => openDialog());
+ipcMain.handle('lumen:set-glass', (_e, on) => {
+  if (!isMac || !win || win.isDestroyed()) return false;
+  win.setVibrancy(on ? 'under-window' : null);
+  win.setBackgroundColor(on ? '#00000000' : '#141416');
+  return !!on;
+});
 
 function setupDownloads(ses) {
   // The web app saves via <a download>; turn that into a native Save dialog with proper filters.

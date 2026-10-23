@@ -13,4 +13,6 @@ contextBridge.exposeInMainWorld('lumenDesktop', {
     ipcRenderer.on('lumen:open-file', (_e, f) => cb({ name: String(f.name), type: String(f.type), data: f.data }));
   },
   ready: () => ipcRenderer.send('lumen:ready'),
+  /** macOS: translucent window (vibrancy) behind the glass panels; no-op elsewhere. */
+  setGlass: (on) => ipcRenderer.invoke('lumen:set-glass', !!on),
 });
