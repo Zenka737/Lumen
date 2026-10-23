@@ -476,6 +476,231 @@ export const FILTER_LIST: FilterDef[] = [
       }
     },
   },
+  {
+    id: 'posterize',
+    label: 'Постеризация',
+    group: 'adjust',
+    layerable: true,
+    params: [{ key: 'levels', label: 'Уровней', min: 2, max: 32, step: 1, def: 5 }],
+    apply(buf, p) {
+      const n = Math.max(2, Math.round(p.levels ?? 5));
+      applyLut(buf, lut((v) => (Math.round((v / 255) * (n - 1)) * 255) / (n - 1)));
+    },
+  },
+  {
+    id: 'threshold',
+    label: 'Порог (чёрно-белое)',
+    group: 'adjust',
+    layerable: true,
+    params: [{ key: 'level', label: 'Порог', min: 0, max: 255, step: 1, def: 128 }],
+    apply(buf, p) {
+      const t = p.level ?? 128;
+      const d = buf.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const v = lum(d[i]!, d[i + 1]!, d[i + 2]!) >= t ? 255 : 0;
+        d[i] = d[i + 1] = d[i + 2] = v;
+      }
+    },
+  },
+  {
+    id: 'duotone',
+    label: 'Двухцветное тонирование',
+    group: 'adjust',
+    layerable: true,
+    params: [
+      { key: 'shadowHue', label: 'Тон теней', min: 0, max: 360, step: 1, def: 235, unit: '°' },
+      { key: 'shadowSat', label: 'Насыщ. теней', min: 0, max: 100, step: 1, def: 65, unit: '%' },
+      { key: 'highlightHue', label: 'Тон светов', min: 0, max: 360, step: 1, def: 38, unit: '°' },
+      { key: 'highlightSat', label: 'Насыщ. светов', min: 0, max: 100, step: 1, def: 80, unit: '%' },
+      { key: 'amount', label: 'Сила', min: 0, max: 100, step: 1, def: 100, unit: '%' },
+    ],
+    apply(buf, p) {
+      const dark = hslToRgb(((p.shadowHue ?? 235) % 360) / 360, (p.shadowSat ?? 65) / 100, 0.14);
+      const light = hslToRgb(((p.highlightHue ?? 38) % 360) / 360, (p.highlightSat ?? 80) / 100, 0.86);
+      const k = (p.amount ?? 100) / 100;
+      const d = buf.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const l = lum(d[i]!, d[i + 1]!, d[i + 2]!) / 255;
+        for (let c = 0; c < 3; c++) {
+          const t = (dark[c]! + (light[c]! - dark[c]!) * l) * 255;
+          d[i + c] = d[i + c]! + (t - d[i + c]!) * k;
+        }
+      }
+    },
+  },
+  {
+    id: 'pixelate',
+    label: 'Мозаика',
+    group: 'filter',
+    params: [{ key: 'size', label: 'Размер', min: 2, max: 200, step: 1, def: 12, unit: 'px', spatial: true }],
+    apply(buf, p) {
+      const s = Math.max(1, Math.round(p.size ?? 12));
+      const { width: w, height: h, data: d } = buf;
+      for (let by = 0; by < h; by += s) {
+        for (let bx = 0; bx < w; bx += s) {
+          const ex = Math.min(w, bx + s), ey = Math.min(h, by + s);
+          let r = 0, g = 0, b = 0, a = 0;
+          for (let y = by; y < ey; y++) {
+            for (let x = bx; x < ex; x++) {
+              const i = (y * w + x) * 4;
+              const al = d[i + 3]!;
+              r += d[i]! * al;
+              g += d[i + 1]! * al;
+              b += d[i + 2]! * al;
+              a += al;
+            }
+          }
+          const n = (ex - bx) * (ey - by);
+          const rr = a > 0 ? r / a : 0, gg = a > 0 ? g / a : 0, bb = a > 0 ? b / a : 0, aa = a / n;
+          for (let y = by; y < ey; y++) {
+            for (let x = bx; x < ex; x++) {
+              const i = (y * w + x) * 4;
+              d[i] = rr;
+              d[i + 1] = gg;
+              d[i + 2] = bb;
+              d[i + 3] = aa;
+            }
+          }
+        }
+      }
+    },
+  },
+  {
+    id: 'motionBlur',
+    label: 'Размытие в движении',
+    group: 'filter',
+    params: [
+      { key: 'distance', label: 'Расстояние', min: 0, max: 200, step: 1, def: 20, unit: 'px', spatial: true },
+      { key: 'angle', label: 'Угол', min: -180, max: 180, step: 1, def: 0, unit: '°' },
+    ],
+    apply(buf, p) {
+      const dist = p.distance ?? 20;
+      if (dist < 1) return;
+      const { width: w, height: h, data: d } = buf;
+      const src = new Uint8ClampedArray(d);
+      const a = ((p.angle ?? 0) * Math.PI) / 180;
+      const n = Math.min(96, Math.max(2, Math.ceil(dist)));
+      const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let r = 0, g = 0, b = 0, al = 0;
+          for (let k = 0; k < n; k++) {
+            const t = n === 1 ? 0 : k / (n - 1) - 0.5;
+            const sx = Math.min(w - 1, Math.max(0, Math.round(x + dx * t)));
+            const sy = Math.min(h - 1, Math.max(0, Math.round(y + dy * t)));
+            const i = (sy * w + sx) * 4;
+            const aa = src[i + 3]!;
+            r += src[i]! * aa;
+            g += src[i + 1]! * aa;
+            b += src[i + 2]! * aa;
+            al += aa;
+          }
+          const o = (y * w + x) * 4;
+          if (al > 0) {
+            d[o] = r / al;
+            d[o + 1] = g / al;
+            d[o + 2] = b / al;
+          }
+          d[o + 3] = al / n;
+        }
+      }
+    },
+  },
+  {
+    id: 'emboss',
+    label: 'Рельеф',
+    group: 'filter',
+    params: [
+      { key: 'amount', label: 'Сила', min: 0, max: 500, step: 1, def: 100, unit: '%' },
+      { key: 'angle', label: 'Угол света', min: -180, max: 180, step: 1, def: 135, unit: '°' },
+    ],
+    apply(buf, p) {
+      const { width: w, height: h, data: d } = buf;
+      const src = new Uint8ClampedArray(d);
+      const a = ((p.angle ?? 135) * Math.PI) / 180;
+      const ox = Math.cos(a), oy = Math.sin(a);
+      const k = (p.amount ?? 100) / 100;
+      const at = (x: number, y: number) => {
+        const i = (Math.min(h - 1, Math.max(0, Math.round(y))) * w + Math.min(w - 1, Math.max(0, Math.round(x)))) * 4;
+        return lum(src[i]!, src[i + 1]!, src[i + 2]!);
+      };
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const v = 128 + (at(x + ox, y + oy) - at(x - ox, y - oy)) * k;
+          const i = (y * w + x) * 4;
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+      }
+    },
+  },
+  {
+    id: 'edges',
+    label: 'Контуры (Собель)',
+    group: 'filter',
+    params: [
+      { key: 'strength', label: 'Сила', min: 10, max: 500, step: 1, def: 100, unit: '%' },
+      { key: 'invert', label: 'Тёмные линии', min: 0, max: 1, step: 1, def: 0, toggle: true },
+    ],
+    apply(buf, p) {
+      const { width: w, height: h, data: d } = buf;
+      const l = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i++) l[i] = lum(d[i * 4]!, d[i * 4 + 1]!, d[i * 4 + 2]!);
+      const at = (x: number, y: number) => l[Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))]!;
+      const k = (p.strength ?? 100) / 100;
+      const inv = (p.invert ?? 0) >= 0.5;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const gx = -at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1) + at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1);
+          const gy = -at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1) + at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1);
+          const m = Math.min(255, Math.hypot(gx, gy) * k * 0.5);
+          const v = inv ? 255 - m : m;
+          const i = (y * w + x) * 4;
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+      }
+    },
+  },
+  {
+    id: 'chromatic',
+    label: 'Хроматическая аберрация',
+    group: 'filter',
+    params: [{ key: 'amount', label: 'Сдвиг', min: 0, max: 100, step: 1, def: 15, unit: '‰' }],
+    apply(buf, p) {
+      const { width: w, height: h, data: d } = buf;
+      const k = (p.amount ?? 15) / 1000;
+      if (k <= 0) return;
+      const src = new Uint8ClampedArray(d);
+      const cx = (w - 1) / 2, cy = (h - 1) / 2;
+      const sample = (x: number, y: number, c: number) => src[(Math.min(h - 1, Math.max(0, Math.round(y))) * w + Math.min(w - 1, Math.max(0, Math.round(x)))) * 4 + c]!;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          d[i] = sample(cx + (x - cx) * (1 + k), cy + (y - cy) * (1 + k), 0);
+          d[i + 2] = sample(cx + (x - cx) * (1 - k), cy + (y - cy) * (1 - k), 2);
+        }
+      }
+    },
+  },
+  {
+    id: 'clarity',
+    label: 'Чёткость (локальный контраст)',
+    group: 'filter',
+    params: [
+      { key: 'amount', label: 'Эффект', min: -100, max: 300, step: 1, def: 60, unit: '%' },
+      { key: 'radius', label: 'Радиус', min: 5, max: 100, step: 1, def: 30, unit: 'px', spatial: true },
+    ],
+    apply(buf, p) {
+      const k = (p.amount ?? 60) / 100;
+      const blurred: PixelBuffer = { width: buf.width, height: buf.height, data: new Uint8ClampedArray(buf.data) };
+      gaussianBlur(blurred, Math.max(1, p.radius ?? 30));
+      const d = buf.data, bd = blurred.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const l = lum(d[i]!, d[i + 1]!, d[i + 2]!) / 255;
+        const mid = 1 - Math.abs(l * 2 - 1); // strongest in the midtones
+        for (let c = 0; c < 3; c++) d[i + c] = d[i + c]! + (d[i + c]! - bd[i + c]!) * k * mid;
+      }
+    },
+  },
 ];
 
 export const FILTERS: Record<string, FilterDef> = Object.fromEntries(FILTER_LIST.map((f) => [f.id, f]));

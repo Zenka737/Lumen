@@ -106,7 +106,7 @@ function mapMask(l: Layer, fn: (src: HTMLCanvasElement) => HTMLCanvasElement): v
   if (l.mask) l.mask = fn(l.mask);
 }
 
-export const ADJUSTMENT_LAYER_TYPES = ['brightnessContrast', 'hueSat', 'levels', 'curves'] as const;
+export const ADJUSTMENT_LAYER_TYPES = ['brightnessContrast', 'hueSat', 'levels', 'curves', 'duotone', 'posterize', 'threshold'] as const;
 
 export interface AdjustSession {
   filter: FilterDef;

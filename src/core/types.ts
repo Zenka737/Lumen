@@ -8,7 +8,15 @@ export type BlendMode =
   | 'darken'
   | 'lighten'
   | 'soft-light'
-  | 'difference';
+  | 'hard-light'
+  | 'color-dodge'
+  | 'color-burn'
+  | 'difference'
+  | 'exclusion'
+  | 'hue'
+  | 'saturation'
+  | 'color'
+  | 'luminosity';
 
 export type LayerKind = 'raster' | 'image' | 'text' | 'shape' | 'adjustment';
 
