@@ -4,7 +4,6 @@
 // Verifies: window loads, image opened from CLI arg, brush stroke changes pixels, export through the
 // native menu writes a PNG, project save writes .lumen, no console/page errors.
 import { _electron as electron } from 'playwright-core';
-import electronPath from 'electron';
 import { mkdtempSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -24,12 +23,20 @@ const waitFile = async (re, ms = 15000) => {
   throw new Error(`no file matching ${re} in ${outDir}`);
 };
 
-const app = await electron.launch({
-  executablePath: exe || electronPath,
+const launchOnce = async () => electron.launch({
+  executablePath: exe || (await import('electron')).default,
   args: [...(exe ? [] : ['.']), image, ...(process.platform === 'linux' ? ['--no-sandbox'] : [])],
-  timeout: 60_000,
+  timeout: 45_000,
   env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1', ...(process.env.CI ? { LUMEN_DISABLE_GPU: '1' } : {}), LUMEN_SAVE_DIR: outDir, LUMEN_USER_DATA: join(outDir, 'profile') },
 });
+// Playwright's Electron handshake occasionally stalls on CI runners (no GPU, cold disk); retry the launch.
+let app;
+for (let attempt = 1; ; attempt++) {
+  try { app = await launchOnce(); break; } catch (e) {
+    log(`launch attempt ${attempt} failed: ${String(e.message).split('\n')[0]}`);
+    if (attempt >= 3) throw e;
+  }
+}
 app.process().stdout?.on('data', (d) => process.stdout.write(`[main] ${d}`));
 app.process().stderr?.on('data', (d) => { const s = String(d); if (/\[lumen\]|error/i.test(s) && !/GPU|gpu_|viz|dbus|Gtk/i.test(s)) errors.push(`main: ${s.trim()}`); });
 const page = await app.firstWindow();
