@@ -9,6 +9,9 @@ import { mkdtempSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+// Hard stop: a hung step must fail the job quickly instead of blocking CI for hours.
+const watchdog = setTimeout(() => { console.error('[verify] TIMEOUT: e2e did not finish within 150 s'); process.exit(2); }, 150_000);
+watchdog.unref();
 const exe = process.argv[2];
 const outDir = mkdtempSync(join(tmpdir(), 'lumen-verify-'));
 const image = resolve('build/icons/256x256.png');
@@ -126,8 +129,10 @@ await page.evaluate(() => window.lumen.setTool('brush'));
 await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.move(cx + 40, cy + 30); await page.mouse.up();
 if (app) await app.evaluate(({ dialog }) => { globalThis.__guard = 0; dialog.showMessageBoxSync = () => { globalThis.__guard++; return 0; }; });
 const dirty = await page.evaluate(() => window.lumen.revision !== window.lumen.savedRevision);
-await page.evaluate(() => window.close()).catch(() => {});
-await new Promise((r) => setTimeout(r, 1500));
+if (app) {
+  await Promise.race([page.evaluate(() => window.close()).catch(() => {}), new Promise((r) => setTimeout(r, 5000))]);
+  await new Promise((r) => setTimeout(r, 1500));
+}
 const guard = app ? await app.evaluate(() => globalThis.__guard).catch(() => 'n/a (app exited)') : 'skipped (CDP mode)';
 log('dirty =', dirty, 'quit-guard prompts =', guard);
 if (app) await app.evaluate(({ app }) => app.exit(0)).catch(() => {}); else child.kill();
