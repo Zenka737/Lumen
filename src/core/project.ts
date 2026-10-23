@@ -1,6 +1,7 @@
 import { isBlendMode } from './blend';
 import { createCanvas, ctx2d, MAX_SIDE } from './canvas';
 import { Doc, Layer, newId } from './document';
+import { cloneAnimation, sanitizeAnimation, type Animation } from './animation';
 import { cloneMeta } from './types';
 import { canvasToBlob, decodeImage } from './imageio';
 import type { Guide } from './document';
@@ -20,6 +21,7 @@ export interface ProjectFile {
   activeId: string;
   layers: { meta: LayerMeta; data: string; mask?: string }[];
   guides?: Guide[];
+  animation?: Animation;
 }
 
 /** Same structure with Blobs (cheaper; used for IndexedDB autosave). */
@@ -31,6 +33,7 @@ export interface ProjectRecord {
   savedAt: number;
   layers: { meta: LayerMeta; blob: Blob; mask?: Blob }[];
   guides?: Guide[];
+  animation?: Animation;
 }
 
 export function serializeProject(doc: Doc): ProjectFile {
@@ -43,6 +46,7 @@ export function serializeProject(doc: Doc): ProjectFile {
     activeId: doc.activeId,
     layers: doc.layers.map((l) => ({ meta: cloneMeta(l.meta), data: l.canvas.toDataURL('image/png'), ...(l.mask ? { mask: l.mask.toDataURL('image/png') } : {}) })),
     guides: doc.guides.map((g) => ({ ...g })),
+    ...(doc.animation ? { animation: cloneAnimation(doc.animation) } : {}),
   };
 }
 
@@ -53,7 +57,7 @@ export async function recordFromDoc(doc: Doc): Promise<ProjectRecord> {
     if (l.mask) rec.mask = await canvasToBlob(l.mask, 'image/png');
     layers.push(rec);
   }
-  return { name: doc.name, width: doc.width, height: doc.height, activeId: doc.activeId, savedAt: Date.now(), layers, guides: doc.guides.map((g) => ({ ...g })) };
+  return { name: doc.name, width: doc.width, height: doc.height, activeId: doc.activeId, savedAt: Date.now(), layers, guides: doc.guides.map((g) => ({ ...g })), ...(doc.animation ? { animation: cloneAnimation(doc.animation) } : {}) };
 }
 
 const num = (v: unknown, d: number, lo = -Infinity, hi = Infinity): number => (typeof v === 'number' && isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d);
@@ -215,6 +219,7 @@ export async function docFromRecord(rec: ProjectRecord): Promise<Doc> {
     doc.layers.push(layer);
   }
   doc.guides = sanitizeGuides(rec.guides, w, h);
+  doc.animation = sanitizeAnimation(rec.animation, new Set(doc.layers.map((l) => l.meta.id)));
   doc.activeId = doc.find(rec.activeId) ? rec.activeId : doc.layers[doc.layers.length - 1]?.meta.id ?? '';
   return doc;
 }
@@ -240,6 +245,7 @@ export async function parseProject(text: string): Promise<Doc> {
     doc.layers.push(layer);
   }
   doc.guides = sanitizeGuides(obj.guides, w, h);
+  doc.animation = sanitizeAnimation(obj.animation, new Set(doc.layers.map((l) => l.meta.id)));
   doc.activeId = typeof obj.activeId === 'string' && doc.find(obj.activeId) ? obj.activeId : doc.layers[doc.layers.length - 1]?.meta.id ?? '';
   return doc;
 }

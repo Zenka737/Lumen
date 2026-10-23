@@ -14,6 +14,7 @@ import { createColorPanel } from './panels/color';
 import { createHistoryPanel } from './panels/history';
 import { createLayersPanel } from './panels/layers';
 import { createPropertiesPanel } from './panels/properties';
+import { createTimelinePanel } from './panels/timeline';
 
 const LS = {
   get(k: string): string | null {
@@ -166,6 +167,7 @@ export function mountApp(root: HTMLElement, ed: Editor): void {
   panelsEl.append(
     section('color', 'Цвет', icons.palette, createColorPanel(ed)),
     section('props', 'Свойства и коррекция', icons.sliders, createPropertiesPanel(ed)),
+    section('timeline', 'Анимация', icons.timeline, createTimelinePanel(ed)),
     section('layers', 'Слои', icons.layers, createLayersPanel(ed), { grow: true }),
     section('history', 'История', icons.history, createHistoryPanel(ed)),
   );

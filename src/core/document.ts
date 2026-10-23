@@ -1,4 +1,5 @@
 import { createCanvas } from './canvas';
+import type { Animation } from './animation';
 import { Selection } from './selection';
 import type { LayerKind, LayerMeta } from './types';
 
@@ -76,6 +77,8 @@ export class Doc {
   activeId = '';
   selection = new Selection();
   guides: Guide[] = [];
+  /** Keyframe animation (optional); edited from the timeline panel. */
+  animation: Animation | undefined = undefined;
 
   constructor(
     public width: number,

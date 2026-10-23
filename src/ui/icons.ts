@@ -51,6 +51,7 @@ export const icons = {
   image: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' + p('m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21')),
   layers: svg(p('m12 2 9.5 5L12 12 2.5 7 12 2Z', 'm2.5 12 9.5 5 9.5-5', 'm2.5 17 9.5 5 9.5-5')),
   sliders: svg(p('M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3', 'M1 14h6', 'M9 8h6', 'M17 16h6')),
+  timeline: svg(p('M3 5h18', 'M3 12h18', 'M3 19h18') + '<circle cx="8" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="11" cy="19" r="1.6"/>'),
   history: svg(p('M3 12a9 9 0 1 0 3-6.7L3 8', 'M3 3v5h5', 'M12 7v5l4 2')),
   palette: svg(p('M12 22a10 10 0 1 1 10-10c0 2.8-2.2 4-4 4h-1.8a1.8 1.8 0 0 0-1.3 3.1A1.6 1.6 0 0 1 12 22Z') + '<circle cx="7.5" cy="10.5" r="1.2"/><circle cx="12" cy="7" r="1.2"/><circle cx="16.5" cy="10.5" r="1.2"/>'),
   panel: svg('<rect x="3" y="3" width="18" height="18" rx="2"/>' + p('M15 3v18')),

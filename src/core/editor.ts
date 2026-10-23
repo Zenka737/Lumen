@@ -37,6 +37,8 @@ export interface EditorEvents {
   saved: { time: number; ok: boolean };
   busy: string | null;
   toolOptions: void;
+  /** Animation timeline data changed. */
+  animation: void;
 }
 
 export type ToastKind = 'info' | 'success' | 'error' | 'warn';
@@ -163,6 +165,13 @@ export class Editor {
 
   get active(): Layer | null {
     return this.doc.active;
+  }
+
+  /** Call after editing `doc.animation`: marks the document dirty and refreshes the timeline. */
+  animationChanged(): void {
+    this.revision++;
+    this.scheduleAutosave();
+    this.events.emit('animation', undefined);
   }
 
   /** Marks the document changed. `structure` → panels rebuild. `rect` → partial recomposite. */

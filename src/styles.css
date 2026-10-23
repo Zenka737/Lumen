@@ -1797,3 +1797,18 @@ kbd {
 .ruler-corner[hidden] {
   display: none;
 }
+
+/* ---- timeline / animation panel ---- */
+.timeline-panel { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+.tl-preview { width: 100%; max-width: 100%; height: auto; border-radius: 6px; background: repeating-conic-gradient(var(--bg-3, #e4e4e8) 0% 25%, var(--bg-2, #f2f2f5) 0% 50%) 50% / 16px 16px; border: 1px solid var(--line, rgba(0,0,0,.12)); display: block; }
+.tl-time { font: 500 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; opacity: .7; margin-left: auto; }
+.kf-row { display: grid; grid-template-columns: 20px 54px 86px 14px minmax(28px, 1fr); align-items: center; gap: 4px; }
+.kf-label { font-size: 12px; opacity: .8; }
+.kf-btn { all: unset; cursor: pointer; text-align: center; font-size: 13px; line-height: 20px; border-radius: 4px; opacity: .35; }
+.kf-btn:hover { opacity: .8; }
+.kf-btn.on { opacity: 1; color: var(--accent, #4c6ef5); }
+.kf-btn:focus-visible, .kf-dot:focus-visible { outline: 2px solid var(--accent, #4c6ef5); outline-offset: 1px; }
+.kf-strip { position: relative; height: 16px; border-radius: 3px; background: color-mix(in srgb, currentColor 8%, transparent); }
+.kf-dot { all: unset; cursor: pointer; position: absolute; top: 3px; width: 9px; height: 9px; margin-left: -4px; transform: rotate(45deg); background: color-mix(in srgb, currentColor 45%, transparent); border-radius: 1px; }
+.kf-dot.cur { background: var(--accent, #4c6ef5); }
+.fx-group { display: flex; flex-direction: column; gap: 6px; }
