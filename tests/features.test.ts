@@ -240,7 +240,7 @@ describe('project sanitising (v2 data)', () => {
     expect(sanitizeText({ text: 'Hi', size: 99999, color: 'red', align: 'center', bold: true })).toMatchObject({ text: 'Hi', size: 2000, color: '#000000', align: 'center', bold: true, italic: false });
     expect(sanitizeText({ size: 3 })).toBeUndefined();
     expect(sanitizeShape({ type: 'rect', w: 10, h: 5, fill: '#FF0000', stroke: null, strokeWidth: 2, radius: 3 })).toEqual({ type: 'rect', w: 10, h: 5, fill: '#ff0000', stroke: null, strokeWidth: 2, radius: 3 });
-    expect(sanitizeShape({ type: 'star' })).toBeUndefined();
+    expect(sanitizeShape({ type: 'blob' })).toBeUndefined();
     expect(sanitizeAdjust({ filterId: 'curves', params: { c0n: 2, bad: 'x' } })).toEqual({ filterId: 'curves', params: { c0n: 2 } });
     expect(sanitizeAdjust({ filterId: 'blur', params: {} })).toBeUndefined();
     expect(sanitizeGuides([{ axis: 'v', pos: 10.6 }, { axis: 'q', pos: 1 }, null], 100, 100)).toEqual([{ axis: 'v', pos: 11 }]);

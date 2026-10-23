@@ -3,6 +3,7 @@
  * layer and the layer canvas is regenerated from it after every edit.
  */
 import { createCanvas, ctx2d } from './canvas';
+import { shapePathCommands } from './shapePath';
 import type { ShapeData, TextData } from './types';
 
 export const TEXT_LINE_HEIGHT = 1.25;
@@ -54,9 +55,14 @@ export function drawShape(ctx: CanvasRenderingContext2D, s: ShapeData, ox: numbe
     return;
   }
   const w = s.w * k, hh = s.h * k;
-  if (s.type === 'rect') {
-    if (s.radius > 0) ctx.roundRect(ox, oy, w, hh, Math.min(s.radius * k, w / 2, hh / 2));
-    else ctx.rect(ox, oy, w, hh);
+  const cmds = shapePathCommands(s);
+  if (cmds) {
+    for (const c of cmds) {
+      if (c.op === 'M') ctx.moveTo(ox + c.x * k, oy + c.y * k);
+      else if (c.op === 'L') ctx.lineTo(ox + c.x * k, oy + c.y * k);
+      else if (c.op === 'C') ctx.bezierCurveTo(ox + c.x1 * k, oy + c.y1 * k, ox + c.x2 * k, oy + c.y2 * k, ox + c.x * k, oy + c.y * k);
+      else ctx.closePath();
+    }
   } else ctx.ellipse(ox + w / 2, oy + hh / 2, Math.max(0.01, w / 2), Math.max(0.01, hh / 2), 0, 0, Math.PI * 2);
   if (s.fill) {
     ctx.fillStyle = s.fill;

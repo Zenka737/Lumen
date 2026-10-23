@@ -77,7 +77,7 @@ export function sanitizeText(t: unknown): TextData | undefined {
 export function sanitizeShape(s: unknown): ShapeData | undefined {
   if (!s || typeof s !== 'object') return undefined;
   const o = s as Partial<ShapeData>;
-  if (o.type !== 'rect' && o.type !== 'ellipse' && o.type !== 'line') return undefined;
+  if (o.type !== 'rect' && o.type !== 'ellipse' && o.type !== 'line' && o.type !== 'polygon' && o.type !== 'star') return undefined;
   const out: ShapeData = {
     type: o.type,
     w: num(o.w, 1, 0, MAX_SIDE),
@@ -87,6 +87,10 @@ export function sanitizeShape(s: unknown): ShapeData | undefined {
     strokeWidth: num(o.strokeWidth, 0, 0, 1000),
     radius: num(o.radius, 0, 0, MAX_SIDE),
   };
+  if (Array.isArray(o.radii) && o.radii.length === 4) out.radii = o.radii.map((r) => num(r, 0, 0, MAX_SIDE)) as [number, number, number, number];
+  if (o.cornerStyle === 'round' || o.cornerStyle === 'smooth' || o.cornerStyle === 'cut' || o.cornerStyle === 'inverse') out.cornerStyle = o.cornerStyle;
+  if (o.type === 'polygon' || o.type === 'star') out.sides = Math.round(num(o.sides, o.type === 'star' ? 5 : 6, 3, 60));
+  if (o.type === 'star') out.innerRatio = num(o.innerRatio, 0.5, 0.05, 0.98);
   if (o.type === 'line') {
     out.x1 = num(o.x1, 0);
     out.y1 = num(o.y1, 0);

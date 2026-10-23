@@ -25,7 +25,10 @@ export interface TextData {
   align: TextAlign;
 }
 
-export type ShapeType = 'rect' | 'ellipse' | 'line';
+export type ShapeType = 'rect' | 'ellipse' | 'line' | 'polygon' | 'star';
+
+/** How corners of rect / polygon / star shapes are rounded. */
+export type CornerStyle = 'round' | 'smooth' | 'cut' | 'inverse';
 
 /**
  * Re-editable vector-like shape. Geometry is local to the layer: the shape box is
@@ -39,7 +42,15 @@ export interface ShapeData {
   fill: string | null;
   stroke: string | null;
   strokeWidth: number;
+  /** Uniform corner radius (rect corners unless `radii` is set; polygon / star vertices). */
   radius: number;
+  /** Rect only: per-corner radii [top-left, top-right, bottom-right, bottom-left]; overrides `radius`. */
+  radii?: [number, number, number, number];
+  cornerStyle?: CornerStyle;
+  /** polygon: number of sides, star: number of points. */
+  sides?: number;
+  /** star: inner radius as a fraction of the outer one. */
+  innerRatio?: number;
   x1?: number;
   y1?: number;
   x2?: number;
@@ -75,7 +86,7 @@ export interface LayerMeta {
 export function cloneMeta(m: LayerMeta): LayerMeta {
   const out: LayerMeta = { ...m };
   if (m.text) out.text = { ...m.text };
-  if (m.shape) out.shape = { ...m.shape };
+  if (m.shape) out.shape = { ...m.shape, ...(m.shape.radii ? { radii: [...m.shape.radii] as [number, number, number, number] } : {}) };
   if (m.adjust) out.adjust = { filterId: m.adjust.filterId, params: { ...m.adjust.params } };
   return out;
 }

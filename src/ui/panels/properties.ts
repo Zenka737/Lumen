@@ -10,6 +10,9 @@ import { curveEditor, histograms } from '../curveEditor';
 import { clear, h } from '../dom';
 import { icons } from '../icons';
 import { ALIGNS, FONTS } from '../../tools/text';
+import { CORNER_STYLES } from '../../tools/shape';
+import { cornerRadii } from '../../core/shapePath';
+import type { CornerStyle } from '../../core/types';
 
 /**
  * Properties panel: the live adjustment session (sliders / curves + apply/cancel) when one
@@ -172,7 +175,10 @@ export function createPropertiesPanel(ed: Editor): HTMLElement {
   const renderShape = (l: Layer) => {
     const s = l.meta.shape!;
     const upd = (patch: Partial<ShapeData>) => ed.updateShape(l.meta.id, patch);
-    const names: Record<ShapeData['type'], string> = { rect: 'Прямоугольник', ellipse: 'Эллипс', line: 'Линия' };
+    const names: Record<ShapeData['type'], string> = { rect: 'Прямоугольник', ellipse: 'Эллипс', line: 'Линия', polygon: 'Многоугольник', star: 'Звезда' };
+    const rounded = s.type === 'rect' || s.type === 'polygon' || s.type === 'star';
+    const radii = cornerRadii(s);
+    const perCorner = !!s.radii;
     root.append(
       h('div', { class: 'cp-sub' }, `Фигура: ${names[s.type]}`),
       h(
@@ -189,7 +195,34 @@ export function createPropertiesPanel(ed: Editor): HTMLElement {
           colorField('Цвет обводки', s.stroke ?? ed.bg, (v) => upd({ stroke: v })),
         ),
         slider({ label: 'Толщина', min: 0, max: 200, step: 1, value: s.strokeWidth, unit: 'px', onInput: () => undefined, onCommit: (v) => upd({ strokeWidth: v }) }).el,
-        s.type === 'rect' ? slider({ label: 'Скругление', min: 0, max: 500, step: 1, value: s.radius, unit: 'px', onInput: () => undefined, onCommit: (v) => upd({ radius: v }) }).el : '',
+        rounded
+          ? slider({ label: 'Скругление', min: 0, max: 500, step: 1, value: s.radius, unit: 'px', onInput: () => undefined, onCommit: (v) => upd({ radius: v, radii: undefined }) }).el
+          : '',
+        s.type === 'rect'
+          ? h(
+              'div',
+              { class: 'prop-stack' },
+              checkbox('Свои радиусы углов', perCorner, (v) => upd({ radii: v ? [radii[0], radii[1], radii[2], radii[3]] : undefined })),
+              perCorner
+                ? h(
+                    'div',
+                    { class: 'prop-grid' },
+                    ...(['↖', '↗', '↘', '↙'] as const).map((name, i) =>
+                      numField(name, radii[i]!, (v) => {
+                        const next = [...cornerRadii(l.meta.shape!)] as [number, number, number, number];
+                        next[i] = Math.max(0, v);
+                        upd({ radii: next });
+                      }, { min: 0 }),
+                    ),
+                  )
+                : '',
+            )
+          : '',
+        rounded ? select<CornerStyle>('Стиль углов', CORNER_STYLES, s.cornerStyle ?? 'round', (v) => upd({ cornerStyle: v })) : '',
+        s.type === 'polygon' || s.type === 'star'
+          ? slider({ label: s.type === 'star' ? 'Лучей' : 'Сторон', min: 3, max: 60, step: 1, value: s.sides ?? (s.type === 'star' ? 5 : 6), onInput: () => undefined, onCommit: (v) => upd({ sides: v }) }).el
+          : '',
+        s.type === 'star' ? slider({ label: 'Глубина', min: 0.05, max: 0.98, step: 0.01, value: s.innerRatio ?? 0.5, onInput: () => undefined, onCommit: (v) => upd({ innerRatio: v }) }).el : '',
         h('div', { class: 'prop-row' }, button('Растрировать', () => ed.rasterizeLayer(l.meta.id), { ghost: true, tip: 'Превратить в обычный пиксельный слой' })),
       ),
     );

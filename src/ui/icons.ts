@@ -18,6 +18,8 @@ export const icons = {
   shapeRect: svg('<rect x="4" y="5" width="16" height="14" rx="1.5"/>'),
   shapeEllipse: svg('<ellipse cx="12" cy="12" rx="8.5" ry="7"/>'),
   shapeLine: svg(p('M5 19 19 5')),
+  shapePolygon: svg('<path d="M12 3.5 19.5 9 16.7 18H7.3L4.5 9Z"/>'),
+  shapeStar: svg('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8Z"/>'),
   stamp: svg(p('M9 3h6v4a2 2 0 0 1-1 1.7V12h4a2 2 0 0 1 2 2v2H4v-2a2 2 0 0 1 2-2h4V8.7A2 2 0 0 1 9 7V3Z', 'M5 20h14')),
   heal: svg('<rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-45 12 12)"/>' + p('M12 10.5v3', 'M10.5 12h3')),
   gradient: svg('<rect x="3" y="4" width="18" height="16" rx="2"/>' + p('M7 4v16', 'M11 4v16', 'M15 4v16') .replace(/<path/g, '<path stroke-opacity=".45"')),

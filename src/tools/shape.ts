@@ -1,17 +1,24 @@
 import { createCanvas, ctx2d } from '../core/canvas';
 import type { Editor } from '../core/editor';
-import type { ShapeData } from '../core/types';
+import type { CornerStyle, ShapeData } from '../core/types';
 import { drawShape, shapePad } from '../core/vector';
 import type { Viewport } from '../core/viewport';
-import { checkbox, segmented, slider } from '../ui/controls';
+import { checkbox, segmented, select, slider } from '../ui/controls';
 import { h } from '../ui/dom';
 import { icons } from '../ui/icons';
 import { label } from './selection';
 import type { Tool, ToolPointer } from './tool';
 
-type Kind = 'rect' | 'ellipse' | 'line';
+type Kind = 'rect' | 'ellipse' | 'line' | 'polygon' | 'star';
 
-/** Rectangle / ellipse / line. Shift constrains (square, circle, 45° lines). */
+export const CORNER_STYLES: { id: CornerStyle; label: string }[] = [
+  { id: 'round', label: 'Круглое' },
+  { id: 'smooth', label: 'Плавное (squircle)' },
+  { id: 'cut', label: 'Срез' },
+  { id: 'inverse', label: 'Вогнутое' },
+];
+
+/** Rectangle / ellipse / line / polygon / star. Shift constrains (square, circle, 45° lines). */
 export class ShapeTool implements Tool {
   readonly id = 'shape';
   readonly label = 'Фигуры';
@@ -21,6 +28,10 @@ export class ShapeTool implements Tool {
   stroke = false;
   strokeWidth = 4;
   radius = 0;
+  cornerStyle: CornerStyle = 'round';
+  sides = 6;
+  points = 5;
+  innerRatio = 0.5;
   newLayer = true;
   private a: { x: number; y: number } | null = null;
   private b: { x: number; y: number } | null = null;
@@ -70,7 +81,18 @@ export class ShapeTool implements Tool {
     const sd: ShapeData =
       this.kind === 'line'
         ? { type: 'line', w, h: hh, fill: null, stroke: fg, strokeWidth: this.strokeWidth, radius: 0, x1: a.x - x, y1: a.y - y, x2: b.x - x, y2: b.y - y }
-        : { type: this.kind, w, h: hh, fill: this.fill ? fg : null, stroke: this.stroke ? (this.fill ? bg : fg) : null, strokeWidth: this.strokeWidth, radius: this.kind === 'rect' ? this.radius : 0 };
+        : {
+            type: this.kind,
+            w,
+            h: hh,
+            fill: this.fill ? fg : null,
+            stroke: this.stroke ? (this.fill ? bg : fg) : null,
+            strokeWidth: this.strokeWidth,
+            radius: this.kind === 'ellipse' ? 0 : this.radius,
+            ...(this.kind === 'ellipse' ? {} : { cornerStyle: this.cornerStyle }),
+            ...(this.kind === 'polygon' ? { sides: this.sides } : {}),
+            ...(this.kind === 'star' ? { sides: this.points, innerRatio: this.innerRatio } : {}),
+          };
     return { sd, x, y };
   }
 
@@ -83,7 +105,7 @@ export class ShapeTool implements Tool {
       this.ed.renderer?.markView();
       return;
     }
-    const names: Record<Kind, string> = { rect: 'Прямоугольник', ellipse: 'Эллипс', line: 'Линия' };
+    const names: Record<Kind, string> = { rect: 'Прямоугольник', ellipse: 'Эллипс', line: 'Линия', polygon: 'Многоугольник', star: 'Звезда' };
     const { sd, x, y } = this.data();
     try {
       if (this.newLayer) {
@@ -136,6 +158,8 @@ export class ShapeTool implements Tool {
         [
           { id: 'rect', icon: icons.shapeRect, tip: 'Прямоугольник' },
           { id: 'ellipse', icon: icons.shapeEllipse, tip: 'Эллипс' },
+          { id: 'polygon', icon: icons.shapePolygon, tip: 'Многоугольник' },
+          { id: 'star', icon: icons.shapeStar, tip: 'Звезда' },
           { id: 'line', icon: icons.shapeLine, tip: 'Линия' },
         ],
         this.kind,
@@ -145,6 +169,10 @@ export class ShapeTool implements Tool {
       checkbox('Обводка', this.stroke, (v) => (this.stroke = v), 'Обводка (фоновым цветом при включённой заливке)'),
       slider({ label: 'Толщина', min: 1, max: 200, step: 1, value: this.strokeWidth, unit: 'px', compact: true, onInput: (v) => (this.strokeWidth = v) }).el,
       slider({ label: 'Скругление', min: 0, max: 500, step: 1, value: this.radius, unit: 'px', compact: true, onInput: (v) => (this.radius = v) }).el,
+      select<CornerStyle>('Углы', CORNER_STYLES, this.cornerStyle, (v) => (this.cornerStyle = v)),
+      slider({ label: 'Сторон', min: 3, max: 30, step: 1, value: this.sides, compact: true, onInput: (v) => (this.sides = v) }).el,
+      slider({ label: 'Лучей', min: 3, max: 30, step: 1, value: this.points, compact: true, onInput: (v) => (this.points = v) }).el,
+      slider({ label: 'Глубина', min: 0.1, max: 0.95, step: 0.05, value: this.innerRatio, compact: true, onInput: (v) => (this.innerRatio = v) }).el,
       checkbox('Слой-фигура', this.newLayer, (v) => (this.newLayer = v), 'Создавать редактируемый слой-фигуру (иначе рисовать пикселями на активном слое)'),
       h('span', { class: 'hint' }, 'Двойной щелчок по фигуре — правка в «Свойствах»'),
     );
