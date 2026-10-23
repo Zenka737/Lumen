@@ -10,7 +10,7 @@ import { parseProject, recordFromDoc } from './project';
 import { applyAdjustmentLayer, compositeDoc, flattenToCanvas, Renderer } from './render';
 import type { SelPart, SelState } from './selection';
 import { toCompositeOp } from './blend';
-import type { AdjustData, LayerMeta, Rect, ShapeData, TextData } from './types';
+import { cloneFx, type AdjustData, type LayerFx, type LayerMeta, type Rect, type ShapeData, type TextData } from './types';
 import { cloneMeta, rectClip } from './types';
 import { Viewport } from './viewport';
 import { combineMasks, featherMask, growMask, invertMask } from './maskOps';
@@ -500,6 +500,17 @@ export class Editor {
     const changed = (Object.keys(patch) as (keyof LayerMeta)[]).some((k) => l.meta[k] !== patch[k]);
     if (!changed) return;
     this.structural(label, () => Object.assign(l.meta, patch), coalesce ? `${label}:${id}` : undefined);
+  }
+
+  /** Sets (or clears) the non-destructive layer styles. */
+  setLayerFx(id: string, fx: LayerFx | undefined, coalesce = false): void {
+    const l = this.doc.find(id);
+    if (!l || l.meta.kind === 'adjustment') return;
+    if (JSON.stringify(l.meta.fx) === JSON.stringify(fx)) return;
+    this.structural('Стили слоя', () => {
+      if (fx) l.meta.fx = cloneFx(fx);
+      else delete l.meta.fx;
+    }, coalesce ? `fx:${id}` : undefined);
   }
 
   mergeDown(id = this.doc.activeId): void {

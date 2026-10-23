@@ -63,6 +63,14 @@ export interface AdjustData {
   params: Record<string, number>;
 }
 
+/** Non-destructive layer styles, rendered at composite time. */
+export interface LayerFx {
+  shadow?: { on: boolean; color: string; opacity: number; dx: number; dy: number; blur: number };
+  glow?: { on: boolean; color: string; opacity: number; blur: number; strength: number };
+  stroke?: { on: boolean; color: string; width: number; pos: 'outside' | 'inside' | 'center'; opacity: number };
+  overlay?: { on: boolean; mode: 'color' | 'gradient'; color: string; color2: string; angle: number; opacity: number };
+}
+
 export interface LayerMeta {
   id: string;
   name: string;
@@ -80,6 +88,12 @@ export interface LayerMeta {
   text?: TextData;
   shape?: ShapeData;
   adjust?: AdjustData;
+  /** Layer styles (shadow, glow, outline, overlay). */
+  fx?: LayerFx;
+}
+
+export function cloneFx(f: LayerFx): LayerFx {
+  return { ...(f.shadow ? { shadow: { ...f.shadow } } : {}), ...(f.glow ? { glow: { ...f.glow } } : {}), ...(f.stroke ? { stroke: { ...f.stroke } } : {}), ...(f.overlay ? { overlay: { ...f.overlay } } : {}) };
 }
 
 /** Deep copy of layer metadata (nested data objects must never be shared between history states). */
@@ -87,6 +101,7 @@ export function cloneMeta(m: LayerMeta): LayerMeta {
   const out: LayerMeta = { ...m };
   if (m.text) out.text = { ...m.text };
   if (m.shape) out.shape = { ...m.shape, ...(m.shape.radii ? { radii: [...m.shape.radii] as [number, number, number, number] } : {}) };
+  if (m.fx) out.fx = cloneFx(m.fx);
   if (m.adjust) out.adjust = { filterId: m.adjust.filterId, params: { ...m.adjust.params } };
   return out;
 }

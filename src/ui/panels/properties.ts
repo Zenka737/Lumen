@@ -11,8 +11,9 @@ import { clear, h } from '../dom';
 import { icons } from '../icons';
 import { ALIGNS, FONTS } from '../../tools/text';
 import { CORNER_STYLES } from '../../tools/shape';
+import { defaultFx } from '../../core/layerFx';
 import { cornerRadii } from '../../core/shapePath';
-import type { CornerStyle } from '../../core/types';
+import type { CornerStyle, LayerFx } from '../../core/types';
 
 /**
  * Properties panel: the live adjustment session (sliders / curves + apply/cancel) when one
@@ -228,6 +229,64 @@ export function createPropertiesPanel(ed: Editor): HTMLElement {
     );
   };
 
+  /** Layer styles: shadow, glow, outline, overlay (non-destructive). */
+  const renderFx = (l: Layer) => {
+    const def = defaultFx();
+    const cur: Required<LayerFx> = {
+      shadow: { ...def.shadow, ...l.meta.fx?.shadow },
+      glow: { ...def.glow, ...l.meta.fx?.glow },
+      stroke: { ...def.stroke, ...l.meta.fx?.stroke },
+      overlay: { ...def.overlay, ...l.meta.fx?.overlay },
+    };
+    const set = <K extends keyof LayerFx>(key: K, patch: Partial<Required<LayerFx>[K]>, coalesce = true) => {
+      const base = { shadow: { ...cur.shadow }, glow: { ...cur.glow }, stroke: { ...cur.stroke }, overlay: { ...cur.overlay } } as Required<LayerFx>;
+      Object.assign(base[key] as object, patch);
+      (cur as Required<LayerFx>)[key] = base[key];
+      ed.setLayerFx(l.meta.id, base, coalesce);
+    };
+    const sl = (label: string, min: number, max: number, step: number, value: number, onInput: (v: number) => void, unit?: string) =>
+      slider({ label, min, max, step, value, unit, compact: true, onInput });
+    const group = (title: string, on: boolean, toggle: (v: boolean) => void, body: () => (HTMLElement | string)[]) =>
+      h('div', { class: 'fx-group' }, checkbox(title, on, (v) => {
+        toggle(v);
+        setTimeout(() => render(true), 0);
+      }), on ? h('div', { class: 'prop-stack' }, ...body()) : '');
+    root.append(
+      h('div', { class: 'cp-sub' }, 'Стили слоя'),
+      h(
+        'div',
+        { class: 'prop-stack' },
+        group('Тень', cur.shadow.on, (v) => set('shadow', { on: v }, false), () => [
+          h('div', { class: 'prop-row' }, colorField('Цвет тени', cur.shadow.color, (v) => set('shadow', { color: v }, false))),
+          sl('Непрозр.', 0, 1, 0.05, cur.shadow.opacity, (v) => set('shadow', { opacity: v })).el,
+          sl('Смещ. X', -100, 100, 1, cur.shadow.dx, (v) => set('shadow', { dx: v }), 'px').el,
+          sl('Смещ. Y', -100, 100, 1, cur.shadow.dy, (v) => set('shadow', { dy: v }), 'px').el,
+          sl('Размытие', 0, 100, 1, cur.shadow.blur, (v) => set('shadow', { blur: v }), 'px').el,
+        ]),
+        group('Свечение', cur.glow.on, (v) => set('glow', { on: v }, false), () => [
+          h('div', { class: 'prop-row' }, colorField('Цвет свечения', cur.glow.color, (v) => set('glow', { color: v }, false))),
+          sl('Непрозр.', 0, 1, 0.05, cur.glow.opacity, (v) => set('glow', { opacity: v })).el,
+          sl('Размытие', 0, 100, 1, cur.glow.blur, (v) => set('glow', { blur: v }), 'px').el,
+          sl('Сила', 1, 6, 1, cur.glow.strength, (v) => set('glow', { strength: v })).el,
+        ]),
+        group('Обводка', cur.stroke.on, (v) => set('stroke', { on: v }, false), () => [
+          h('div', { class: 'prop-row' }, colorField('Цвет обводки', cur.stroke.color, (v) => set('stroke', { color: v }, false))),
+          sl('Толщина', 1, 100, 1, cur.stroke.width, (v) => set('stroke', { width: v }), 'px').el,
+          select<'outside' | 'inside' | 'center'>('Положение', [{ id: 'outside', label: 'Снаружи' }, { id: 'center', label: 'По центру' }, { id: 'inside', label: 'Внутри' }], cur.stroke.pos, (v) => set('stroke', { pos: v }, false)),
+        ]),
+        group('Наложение цвета', cur.overlay.on, (v) => set('overlay', { on: v }, false), () => [
+          select<'color' | 'gradient'>('Тип', [{ id: 'color', label: 'Цвет' }, { id: 'gradient', label: 'Градиент' }], cur.overlay.mode, (v) => {
+            set('overlay', { mode: v }, false);
+            setTimeout(() => render(true), 0);
+          }),
+          h('div', { class: 'prop-row' }, colorField('Цвет 1', cur.overlay.color, (v) => set('overlay', { color: v }, false)), cur.overlay.mode === 'gradient' ? colorField('Цвет 2', cur.overlay.color2, (v) => set('overlay', { color2: v }, false)) : ''),
+          cur.overlay.mode === 'gradient' ? sl('Угол', -180, 180, 1, cur.overlay.angle, (v) => set('overlay', { angle: v }), '°').el : '',
+          sl('Непрозр.', 0, 1, 0.05, cur.overlay.opacity, (v) => set('overlay', { opacity: v })).el,
+        ]),
+      ),
+    );
+  };
+
   const renderLayer = () => {
     const l = ed.active;
     if (!l) {
@@ -245,6 +304,7 @@ export function createPropertiesPanel(ed: Editor): HTMLElement {
     );
     if (l.meta.kind === 'text' && l.meta.text) renderText(l);
     if (l.meta.kind === 'shape' && l.meta.shape) renderShape(l);
+    renderFx(l);
     root.append(
       h('div', { class: 'cp-sub' }, 'Коррекция'),
       h('div', { class: 'quick-grid' }, ...FILTER_LIST.filter((f) => f.group === 'adjust').map((f) => h('button', { type: 'button', class: 'chip', onclick: () => ed.startAdjust(f.id) }, f.label))),
@@ -266,7 +326,7 @@ export function createPropertiesPanel(ed: Editor): HTMLElement {
     const l = ed.active;
     const key = a
       ? `adj:${a.filter.id}:${a.layer.meta.id}:${a.previewOn}`
-      : `layer:${l?.meta.id}:${l?.meta.kind}:${l?.meta.x}:${l?.meta.y}:${l?.width}x${l?.height}:${l?.meta.visible}:${ed.doc.selection.active}:${JSON.stringify(l?.meta.text ?? l?.meta.shape ?? l?.meta.adjust ?? '')}`;
+      : `layer:${l?.meta.id}:${l?.meta.kind}:${l?.meta.x}:${l?.meta.y}:${l?.width}x${l?.height}:${l?.meta.visible}:${ed.doc.selection.active}:${JSON.stringify(l?.meta.text ?? l?.meta.shape ?? l?.meta.adjust ?? '')}:${JSON.stringify(l?.meta.fx ?? '')}`;
     if (!force && key === lastKey) return;
     // don't rebuild controls under the user's pointer (drags would break); sync on release
     if (!force && interacting) return;

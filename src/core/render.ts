@@ -1,5 +1,6 @@
 import { toCompositeOp } from './blend';
 import { createCanvas, ctx2d, scratchCanvas } from './canvas';
+import { hasFx, renderFx } from './layerFx';
 import type { Doc, Layer, LiveStroke } from './document';
 import type { Rect } from './types';
 import { rectClip, rectUnion } from './types';
@@ -159,8 +160,25 @@ function drawLayers(doc: Doc, ctx: CanvasRenderingContext2D, opts: CompositeOpti
       continue;
     }
     const lclip = clip ? { x: clip.x - layer.meta.x, y: clip.y - layer.meta.y, w: clip.w, h: clip.h } : null;
-    ctx.drawImage(layerSource(layer, docMask, lclip, committed), layer.meta.x, layer.meta.y);
+    const source = layerSource(layer, docMask, lclip, committed);
+    if (hasFx(layer.meta.fx) && source instanceof HTMLCanvasElement) {
+      const styled = styledLayer(layer, source, !!lclip || source !== layer.canvas);
+      ctx.drawImage(styled.canvas, layer.meta.x - styled.pad, layer.meta.y - styled.pad);
+    } else ctx.drawImage(source, layer.meta.x, layer.meta.y);
   }
+}
+
+const fxCache = new WeakMap<Layer, { src: HTMLCanvasElement; ver: number; key: string; res: { canvas: HTMLCanvasElement; pad: number } }>();
+/** Styled render of a layer; cached while its pixels and styles do not change. */
+function styledLayer(layer: Layer, source: HTMLCanvasElement, volatile: boolean): { canvas: HTMLCanvasElement; pad: number } {
+  const key = JSON.stringify(layer.meta.fx);
+  if (!volatile) {
+    const hit = fxCache.get(layer);
+    if (hit && hit.src === source && hit.ver === layer.pixelVersion && hit.key === key) return hit.res;
+  }
+  const res = renderFx(source, layer.meta.fx!);
+  if (!volatile) fxCache.set(layer, { src: source, ver: layer.pixelVersion, key, res });
+  return res;
 }
 
 function hasAdjustments(doc: Doc, until: number): boolean {

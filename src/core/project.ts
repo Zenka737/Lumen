@@ -4,7 +4,7 @@ import { Doc, Layer, newId } from './document';
 import { cloneMeta } from './types';
 import { canvasToBlob, decodeImage } from './imageio';
 import type { Guide } from './document';
-import type { AdjustData, LayerKind, LayerMeta, ShapeData, TextData } from './types';
+import type { AdjustData, LayerFx, LayerKind, LayerMeta, ShapeData, TextData } from './types';
 import { FILTERS } from '../filters/filters';
 
 /**
@@ -100,6 +100,32 @@ export function sanitizeShape(s: unknown): ShapeData | undefined {
   return out;
 }
 
+const bool = (v: unknown) => v === true;
+const hex = (v: unknown, d: string) => color(v) ?? d;
+
+export function sanitizeFx(f: unknown): LayerFx | undefined {
+  if (!f || typeof f !== 'object') return undefined;
+  const o = f as LayerFx;
+  const out: LayerFx = {};
+  if (o.shadow && typeof o.shadow === 'object') {
+    const s = o.shadow;
+    out.shadow = { on: bool(s.on), color: hex(s.color, '#000000'), opacity: num(s.opacity, 0.45, 0, 1), dx: num(s.dx, 6, -300, 300), dy: num(s.dy, 8, -300, 300), blur: num(s.blur, 14, 0, 200) };
+  }
+  if (o.glow && typeof o.glow === 'object') {
+    const g = o.glow;
+    out.glow = { on: bool(g.on), color: hex(g.color, '#7aa2ff'), opacity: num(g.opacity, 0.9, 0, 1), blur: num(g.blur, 18, 0, 200), strength: Math.round(num(g.strength, 2, 1, 6)) };
+  }
+  if (o.stroke && typeof o.stroke === 'object') {
+    const t = o.stroke;
+    out.stroke = { on: bool(t.on), color: hex(t.color, '#000000'), width: num(t.width, 4, 0, 200), pos: t.pos === 'inside' || t.pos === 'center' ? t.pos : 'outside', opacity: num(t.opacity, 1, 0, 1) };
+  }
+  if (o.overlay && typeof o.overlay === 'object') {
+    const v = o.overlay;
+    out.overlay = { on: bool(v.on), mode: v.mode === 'color' ? 'color' : 'gradient', color: hex(v.color, '#ff6a3d'), color2: hex(v.color2, '#7a4dff'), angle: num(v.angle, 90, -360, 360), opacity: num(v.opacity, 1, 0, 1) };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 export function sanitizeAdjust(a: unknown): AdjustData | undefined {
   if (!a || typeof a !== 'object') return undefined;
   const o = a as Partial<AdjustData>;
@@ -130,6 +156,8 @@ export function sanitizeMeta(m: Partial<LayerMeta> | undefined, i: number): Laye
   if ((out.kind === 'text' && !text) || (out.kind === 'shape' && !shape)) out.kind = 'raster';
   if (out.kind === 'adjustment' && !adjust) out.visible = false;
   if (typeof m?.maskEnabled === 'boolean') out.maskEnabled = m.maskEnabled;
+  const fx = out.kind !== 'adjustment' ? sanitizeFx(m?.fx) : undefined;
+  if (fx) out.fx = fx;
   return out;
 }
 
